@@ -33,22 +33,39 @@ import torch
 
 MODEL_NAME = "meta-llama/Meta-Llama-3-8B-Instruct"
 
-print(f"\n[1/2] Downloading tokenizer for {MODEL_NAME}...")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-print("Tokenizer cached successfully.\n")
+try:
+    print(f"\n[1/2] Downloading tokenizer for {MODEL_NAME}...")
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    print("Tokenizer cached successfully.\n")
 
-print(f"[2/2] Downloading model weights for {MODEL_NAME}...")
-print("(This is ~5GB and may take several minutes)\n")
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL_NAME,
-    torch_dtype=torch.float16,
-    device_map="auto",
-)
+    print(f"[2/2] Downloading model weights for {MODEL_NAME}...")
+    print("(This is ~5GB and may take several minutes)\n")
+    model = AutoModelForCausalLM.from_pretrained(
+        MODEL_NAME,
+        torch_dtype=torch.float16,
+        device_map="auto",
+    )
 
-print("\n" + "=" * 60)
-print("SUCCESS: Base model is now cached locally.")
-print(f"Cache location: {os.path.expanduser('~/.cache/huggingface/hub/')}")
-print("")
-print("You can now run the app fully offline:")
-print("  streamlit run app.py")
-print("=" * 60)
+    print("\n" + "=" * 60)
+    print("SUCCESS: Base model is now cached locally.")
+    print(f"Cache location: {os.path.expanduser('~/.cache/huggingface/hub/')}")
+    print("")
+    print("You can now run the app fully offline:")
+    print("  streamlit run app.py")
+    print("=" * 60)
+
+except Exception as e:
+    error_msg = str(e)
+    if "403 Client Error" in error_msg or "gated repo" in error_msg.lower():
+        print("\n" + "❌ " * 20)
+        print("ERROR: YOU DO NOT HAVE ACCESS TO THIS MODEL YET.")
+        print("Llama-3 is a 'gated' model. You must accept Meta's license first.")
+        print("\nFix this in 3 easy steps:")
+        print("1. Go to: https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct")
+        print("2. Log in with the account that matches your HF_TOKEN")
+        print("3. Fill out the form and click 'Agree and access repository'")
+        print("\nOnce granted (usually instant), run this script again.")
+        print("❌ " * 20 + "\n")
+    else:
+        print(f"\nAn unexpected error occurred: {e}")
+    sys.exit(1)
