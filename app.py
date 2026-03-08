@@ -1,8 +1,6 @@
 import streamlit as st
 import logging
 
-# Enforce privacy constraints first (blocks internet before anything else loads)
-from utils.privacy_engine import PrivacyEngine
 from core.inference import LlamaInference
 from core.simplifier import ClinicalSimplifier
 
@@ -52,4 +50,4 @@ if st.button("Simplify Report ✨"):
         st.warning("Please enter some text first!")
 
 st.markdown("---")
-st.caption("Powered by Llama-3 + PEFT | Works offline on Mac, Linux & Windows")
+st.caption("Powered by Llama-3 + PEFT | Privacy-First, Offline Operation | Zero Egress")
