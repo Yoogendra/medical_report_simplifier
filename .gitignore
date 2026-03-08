@@ -1,0 +1,30 @@
+# Environment
+.env
+__pycache__/
+*.pyc
+venv/
+env/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Models & Weights (Air-Gapped: Never commit weights!)
+models/
+*.bin
+*.pt
+*.safetensors
+*.gguf
+adapter_model.bin
+adapter_config.json
+
+# Local App Data
+data/
+*.db
+*.sqlite3
+
+# Jupyter
+.ipynb_checkpoints/
