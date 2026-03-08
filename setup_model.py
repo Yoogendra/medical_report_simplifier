@@ -31,7 +31,7 @@ print("=" * 60)
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
-MODEL_NAME = "meta-llama/Meta-Llama-3-8B-Instruct"
+MODEL_NAME = "NousResearch/Meta-Llama-3-8B-Instruct"
 
 try:
     print(f"\n[1/2] Downloading tokenizer for {MODEL_NAME}...")
