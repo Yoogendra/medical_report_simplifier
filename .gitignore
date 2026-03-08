@@ -28,3 +28,4 @@ data/
 
 # Jupyter
 .ipynb_checkpoints/
+*.ipynb
