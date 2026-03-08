@@ -42,5 +42,3 @@ class PrivacyEngine:
             logger.info("PrivacyEngine: Verified no internet egress (Air-gapped confirmed).")
             return True
 
-# Initialize offline mode aggressively upon import
-PrivacyEngine.enforce_offline_mode()
