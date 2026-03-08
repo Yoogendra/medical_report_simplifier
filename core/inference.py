@@ -1,9 +1,11 @@
 import yaml
 import torch
 import logging
+from pathlib import Path
 from utils.privacy_engine import PrivacyEngine
 
 logger = logging.getLogger(__name__)
+
 
 def get_device():
     """Auto-detects the best available hardware: CUDA > Apple MPS > CPU."""
@@ -34,22 +36,29 @@ class LlamaInference:
 
     def _load_model(self):
         """
-        Loads the fine-tuned Llama-3 model with PEFT adapters.
-        Uses standard transformers + peft for cross-platform compatibility:
-        - CUDA  : 4-bit BitsAndBytes quantization (full 65% memory reduction)
-        - MPS   : fp16 via Apple Metal (memory-efficient on Apple Silicon)
-        - CPU   : bf16/fp32 fallback
+        Loads the fine-tuned model saved by the notebook's model.save_pretrained().
+        The notebook used Unsloth's save which produces a full merged causal LM
+        (not a separate PEFT adapter), so we load it as a standard CausalLM.
+
+        Quantization strategy:
+          - CUDA  : 4-bit BitsAndBytes (65% memory reduction)
+          - MPS   : fp16 via Apple Metal
+          - CPU   : bf16 fallback
         """
         from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-        from peft import PeftModel
 
-        adapter_path = self.model_config["adapter_path"]
-        base_model_name = self.model_config["base_model"]
+        model_path = self.model_config["adapter_path"]
 
-        logger.info(f"Loading tokenizer from: {adapter_path}")
-        self.tokenizer = AutoTokenizer.from_pretrained(adapter_path)
+        if not Path(model_path).exists():
+            raise FileNotFoundError(
+                f"Model not found at '{model_path}'.\n"
+                "Please download your trained adapter from Google Drive and place it there.\n"
+                "Expected files: adapter_config.json / config.json, *.safetensors, tokenizer files."
+            )
 
-        # 4-bit quantization available on CUDA only
+        logger.info(f"Loading tokenizer from: {model_path}")
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+
         if self.device == "cuda" and self.model_config.get("load_in_4bit", True):
             quantization_config = BitsAndBytesConfig(
                 load_in_4bit=True,
@@ -57,34 +66,30 @@ class LlamaInference:
                 bnb_4bit_quant_type="nf4",
                 bnb_4bit_compute_dtype=torch.bfloat16,
             )
-            logger.info("Loading base model with 4-bit BitsAndBytes quantization (65% memory reduction).")
-            base_model = AutoModelForCausalLM.from_pretrained(
-                base_model_name,
+            logger.info("Loading model with 4-bit BitsAndBytes quantization (65% memory reduction).")
+            self.model = AutoModelForCausalLM.from_pretrained(
+                model_path,
                 quantization_config=quantization_config,
                 device_map="auto",
             )
         elif self.device == "mps":
-            logger.info("Loading base model in fp16 for Apple Silicon MPS.")
-            base_model = AutoModelForCausalLM.from_pretrained(
-                base_model_name,
+            logger.info("Loading model in fp16 for Apple Silicon MPS.")
+            self.model = AutoModelForCausalLM.from_pretrained(
+                model_path,
                 torch_dtype=torch.float16,
-                device_map={"": self.device},
-            )
+            ).to(self.device)
         else:
-            logger.info("Loading base model on CPU (bf16).")
-            base_model = AutoModelForCausalLM.from_pretrained(
-                base_model_name,
+            logger.info("Loading model in bf16 on CPU.")
+            self.model = AutoModelForCausalLM.from_pretrained(
+                model_path,
                 torch_dtype=torch.bfloat16,
-                device_map={"": self.device},
             )
 
-        logger.info(f"Loading PEFT LoRA adapters from: {adapter_path}")
-        self.model = PeftModel.from_pretrained(base_model, adapter_path)
         self.model.eval()
         logger.info("Model loaded successfully and set to eval mode.")
 
     def generate(self, prompt: str) -> str:
-        """Generates a response using the locally loaded Llama-3 + PEFT model."""
+        """Generates a response using the locally loaded fine-tuned model."""
         inputs = self.tokenizer(
             [prompt],
             return_tensors="pt"
