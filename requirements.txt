@@ -1,9 +1,17 @@
-torch>=2.0.0
+# Cross-platform dependencies — works on Mac (MPS), Linux (CUDA), and CPU
+
+# Core ML
+torch>=2.1.0
 transformers>=4.40.0
 accelerate>=0.29.0
-bitsandbytes>=0.43.0
 peft>=0.10.0
+
+# Optional: 4-bit quantization (Linux/CUDA only — will be skipped on Mac)
+bitsandbytes>=0.43.0
+
+# App
 streamlit>=1.32.0
 pyyaml>=6.0.1
-# unsloth installed separately due to heavy dependencies:
+
+# Installation note for Unsloth (only needed if you are _training_ the model, not for inference):
 # pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"

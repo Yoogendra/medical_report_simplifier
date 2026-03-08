@@ -1,9 +1,8 @@
 model:
-  base_model: "unsloth/llama-3-8b-Instruct-bnb-4bit"
-  adapter_path: "./models/Medical_Llama_Adapter"  # Local offline path
+  base_model: "meta-llama/Meta-Llama-3-8B-Instruct"  # Downloaded once, stored in HF cache
+  adapter_path: "./models/Medical_Llama_Adapter"       # Your local PEFT fine-tuned adapter
   max_seq_length: 2048
-  load_in_4bit: true
-  dtype: null
+  load_in_4bit: true  # Only applied on CUDA (Linux/NVIDIA). Mac uses fp16/MPS automatically.
 
 generation:
   max_new_tokens: 512
